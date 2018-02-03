@@ -10,21 +10,35 @@ It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac'
 
 ## How to build it your own
 
-1. Clone this repo.
-1. Change current directory to `build/`
-    1. `$ cd /path/to/your/cloned/Mastodon_speech_for_MacOSX`
-    1. `$ cd ./build`
-1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you. Follow the instructions below, if so.
-    1. First of all, be sure that you have set your `php.ini` settings as below to enable create Phar files.
+1. First of all, be sure that you have set your `php.ini` settings as below to enable create Phar files.
 
-       ```php.ini
-        phar.readonly = 0
-        phar.require_hash = 0
-        ```
-    1. `$ chmod 0755 ./box_installer.php`
-    1. `$ php box_installer.php`
-    1. `$ ./box.phar -v` (Current version is v2.7.5, 2018/02/03)
+   ```php.ini
+    phar.readonly = 0
+    phar.require_hash = 0
+    ```
+
+1. Clone this repo.
+
+1. Change current directory to `build/`.
+
+    ```bash
+    $ cd /path/to/your/cloned/Mastodon_speech_for_MacOSX
+    $ cd ./build
+    ```
+
+1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you. Follow the instructions below, if so.
+
+    ```bash
+    $ chmod 0755 ./box_installer.php
+    $ php box_installer.php
+    $ ./box.phar -v
+    $ # Current version is v2.7.5, 2018/02/03
+    ```
+
 1. Run `$ ./box.phar build` to build/compile your Phar app.
+
 1. Then '**qiitedon.phar**' must be built in the parent directory.
-    1. `$ cd ../ && ls`
+
+    - `$ cd ../ && ls`
+
 1. Run test `$ ./qiitedon.phar -t` and if you hear 'Hello mastodon' then it's done. See "How to use" section for detail.
