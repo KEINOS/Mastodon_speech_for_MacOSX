@@ -14,8 +14,8 @@ It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac'
 1. Change current directory to `build/`
     1. `$ cd /path/to/your/cloned/Mastodon_speech_for_MacOSX`
     1. `$ cd ./build`
-1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you as below.
-    1. First of all, be sure that you have set your `php.ini` settings to enable create Phar files as below.
+1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you. Follow the instructions below, if so.
+    1. First of all, be sure that you have set your `php.ini` settings as below to enable create Phar files.
 
        ```php.ini
         phar.readonly = 0
