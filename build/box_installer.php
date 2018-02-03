@@ -3,8 +3,8 @@
  * box.phar installer.
  *
  * Installs box.phar on behalf of the original installer.
- * You better download the installer and install it you own, if you feel
- * insecure about the code below.
+ * If you feel insecure about the code below, you better download the
+ * installer and install it your own.
  */
 
 $url_installer = 'https://box-project.github.io/box2/installer.php';
