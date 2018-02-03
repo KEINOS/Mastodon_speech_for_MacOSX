@@ -26,7 +26,7 @@ It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac'
     $ cd ./build
     ```
 
-1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you. Follow the instructions below, if so.
+1. Download and install "[Box](https://box-project.github.io/box2/)"(Phar archiver app) in `build/` dir, or just run [`box_installer.php`](https://github.com/KEINOS/Mastodon_speech_for_MacOSX/blob/master/build/box_installer.php) to do it for you. Follow the instructions below, if so.
 
     ```bash
     $ chmod 0755 ./box_installer.php
