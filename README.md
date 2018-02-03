@@ -41,4 +41,4 @@ It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac'
 
     - `$ cd ../ && ls`
 
-1. Run test `$ ./qiitedon.phar -t` and if you hear 'Hello mastodon' then it's done. See "How to use" section for detail.
+1. Run test `$ ./qiitedon.phar -t` and if you hear 'Hello mastodon' then it's done. See "How to use" section for detail usage.
