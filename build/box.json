@@ -1,0 +1,10 @@
+{
+    "chmod": "0755",
+    "base-path": "../",
+    "directories": [
+        "src"
+    ],
+    "main": "src/index.php",
+    "output": "../qiitedon.phar",
+    "stub": true
+}
