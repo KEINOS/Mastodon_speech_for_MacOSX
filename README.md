@@ -10,7 +10,7 @@ It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac'
 
 ## How to build it your own
 
-1. First of all, be sure that you have set your `php.ini` settings as below to enable create Phar files.
+1. First of all, be sure that you have set your `php.ini`'s "[Phar]" settings as below to enable create Phar files.(Use `$ php --ini` to find where it is.)
 
    ```php.ini
     phar.readonly = 0
