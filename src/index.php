@@ -27,11 +27,6 @@ if (ob_get_contents() || ob_get_length()) {
     ob_end_clean();
 }
 
-echo "12345\r";
-echo "67890";
-echo PHP_EOL;
-die();
-
 echo str_repeat(PHP_EOL, get_height_screen());
 echo_eol('Running app ...');
 echo_hr();
