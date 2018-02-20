@@ -27,14 +27,20 @@ if (ob_get_contents() || ob_get_length()) {
     ob_end_clean();
 }
 
+echo "12345\r";
+echo "67890";
+echo PHP_EOL;
+die();
+
+echo str_repeat(PHP_EOL, get_height_screen());
 echo_eol('Running app ...');
 echo_hr();
 echo_eol('Press \'control+c(^C)\' to cancel/quit this app.');
 echo_eol('INPUT MENU:');
 echo_menu([
-    'ltl'   => 'Qiitadon のローカルタイムラインの読み上げを開始します。Qiitadon のローカルタイムラインの読み上げを開始します。',
-    'ftl'   => 'Qiitadon の連合タイムラインの読み上げを開始します。Qiitadon の連合タイムラインの読み上げを開始します。',
-    'trend' => 'Qiita のトレンドを読み上げます。Qiita のトレンドを読み上げます。Qiita のトレンドを読み上げます。Qiita のトレンドを読み上げます。',
+    'ltl'   => 'Qiitadon のローカルタイムラインの読み上げを開始します。',
+    'ftl'   => 'Qiitadon の連合タイムラインの読み上げを開始します。',
+    'trend' => 'Qiita のトレンドを読み上げます。 ',
 ]);
 
 echo_hr();
@@ -97,7 +103,7 @@ while ($is_running) {
         case 'ftl':
             if ($has_been_tooted) {
                 echo_eol('Fetching new toots...');
-                echo_eol('');
+                echo_eol();
             }
 
             $has_been_tooted = false;
@@ -111,19 +117,19 @@ while ($is_running) {
                 }
                 $user_name = $toot['display_name'] ?: $toot['user_name'];
                 $user_name = strip_emoji($user_name);
+                $id_voice  = $toot['user_name'];
                 $content   = trim($toot['content']);
                 $account   = $toot['raw']['account']['acct'];
                 $account   = colour_text("@${account} (${toot_id})", GRAYOUT);
 
                 //表示
                 echo_menu([$user_name => $content]);
-                echo_indent($account, false, MARGIN_LEFT_MAX - mb_strlen(MARKER_TRIM) + 1);
-                //読み上げ who
-                say_name($user_name,'さんの,トゥート','Kyoko');
+                echo_indent($account, DO_NOT_RETURN, MARGIN_LEFT_MAX - mb_strlen(MARKER_TRIM) + 1);
 
-                //読み上げ what
-                $who = ('ja' == $toot_lang) ? 'Otoya' : 'Daniel';
-                say($toot['say'], $who, false, $user_name);
+                //読み上げ
+                $type_voice = ('ja' == $toot_lang) ? 'Otoya' : 'Daniel';
+                say_name($user_name,'さんの,トゥート','Kyoko');
+                say($toot['say'], $type_voice, DO_NOT_ECHO, $id_voice);
              
                 $list_id_tooted[$toot_id] = time();
                 $has_been_tooted = true;

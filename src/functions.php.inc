@@ -22,6 +22,7 @@ function convert_better_voice_acent($string)
 
     return $string;
 }
+
 /* -------------------------------------------------------------- [D] */
 
 function delete_list_oldtoot($array, $hour)
@@ -94,7 +95,7 @@ function echo_div($contents, $attr = '')
     echo "<div $attr>${contents}</div>" . PHP_EOL;
 }
 
-function echo_eol($string, $return = false)
+function echo_eol($string='', $return = false)
 {
     if ($return) {
         return (string) $string . PHP_EOL;
@@ -465,6 +466,7 @@ function sanitize_toot_to_say($string)
 {
     $string = strip_tags_in_toot($string);
     $string = url_cleaner($string);
+    $string = escapeshellcmd($string);
     $string = strip_repeated_strings($string);
 
     return $string;
@@ -517,7 +519,7 @@ function set_voice_id($name)
     global $list_voice_id;
 
     $pos_or_neg = (rand() % 2) ? '+' : '-';
-    $volume     = (string) (rand(1000, 127000) /1000);
+    $volume     = (string) (rand(1, 127));
     $volume     = "${pos_or_neg} ${volume}"; // + 123.233
 
     $list_voice_id[$name] = $volume;
@@ -570,7 +572,8 @@ function strip_repeated_strings($string)
 
 function strip_tags_in_toot($string)
 {
-    $string  = sanitize_eol((string) $string);
+    $string = sanitize_eol((string) $string);
+
     $replace = [
         'http'    => PHP_EOL . 'http',
         '`'       => '\'',

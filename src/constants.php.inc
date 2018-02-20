@@ -11,6 +11,8 @@ const MARKER_TRIM     = '...';
 const NAME_FILE_CONF  = NAME_APP . '.json';
 const PATH_DIR_CURNT  = NAME_DIR_CURNT . DIR_SEP;
 const PATH_DIR_PARNT  = NAME_DIR_PARNT . DIR_SEP;
+const DO_NOT_ECHO     = false;
+const DO_NOT_RETURN   = false;
 
 // Bash color constants
 // https://misc.flogisoft.com/bash/tip_colors_and_formatting
