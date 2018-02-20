@@ -251,6 +251,12 @@ function fix_width($string, $width)
 
 
 /* -------------------------------------------------------------- [G] */
+function get_accent_list()
+{
+    include('accent_dictionary.php.inc');
+    
+    return $accent_dictionary;
+}
 
 function get_command_input($stdin)
 {
@@ -605,17 +611,18 @@ function strReplaceAssoc(array $replace, $subject)
 
 /* -------------------------------------------------------------- [U] */
 
-function url_cleaner($string)
+function url_cleaner($string,$announce_deletion=true)
 {
     $pattern = '/https?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:@&=+$,%#]+/';
 
     $string = preg_replace_callback(
         $pattern,
         function ($matches) {
+            global $announce_deletion;
             if (isset($matches[1])) {
                 return $matches[0];
             }
-            return "。URLを省略しました。";
+            return ($announce_deletion) ? '。URLを省略しました。' : '';
         },
         $string
     );

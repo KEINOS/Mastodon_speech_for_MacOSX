@@ -1,7 +1,6 @@
 <?php
 require_once('constants.php.inc');
 require_once('config.default.php.inc');
-require_once('accent_dictionary.php.inc');
 require_once('functions.php.inc');
 
 // Check if its Mac OSX(Darwin)
@@ -92,7 +91,10 @@ while ($is_running) {
             }
             $cmd = '';
             break;
-
+        case 'trend':
+            include('speech_trend.php.inc');
+            $cmd = '';
+            break;
         case 't':
         case 'ltl':
         case 'ftl':
