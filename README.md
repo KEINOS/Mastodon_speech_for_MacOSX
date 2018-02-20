@@ -2,7 +2,7 @@
 
 A Mastodon voice reader CLI app for macOS.
 
-I named this app "Qiitedon Speech", since my main Mastodon instance is "[Qiitadon](https://qiitadon.com/)" and "[Qiite](https://en.wiktionary.org/wiki/%E8%81%9E%E3%81%8F#Japanese)" means "listen to" in Japanese.:stuck_out_tongue_winking_eye:  Though it must work in other instances.
+I named this app "Qiitedon Speech", since my main Mastodon instance is "[Qiitadon](https://qiitadon.com/)" and "[Qiite](https://en.wiktionary.org/wiki/%E8%81%9E%E3%81%8F#Japanese)" means "listen to" in Japanese.:stuck_out_tongue_winking_eye:  Though it must work with other instances.
 
 It's a simple Phar (PHP archived) CLI application that uses Mastodn API and Mac's `say` command.
 
