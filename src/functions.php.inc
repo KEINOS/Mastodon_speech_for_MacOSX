@@ -95,7 +95,7 @@ function echo_div($contents, $attr = '')
     echo "<div $attr>${contents}</div>" . PHP_EOL;
 }
 
-function echo_eol($string='', $return = false)
+function echo_eol($string = '', $return = false)
 {
     if ($return) {
         return (string) $string . PHP_EOL;
@@ -380,15 +380,19 @@ function get_type_voice()
     return $list;
 }
 
-function get_voice_id($name)
+function get_pitch_id($name)
 {
-    global $list_voice_id;
+    global $list_pitch_id;
 
-    if (isset($list_voice_id[$name])) {
-        return $list_voice_id[$name];
+    $id = md5(trim($name));
+
+    if (isset($list_pitch_id[$id])) {
+        $pitch = $list_pitch_id[$id];
+    } else {
+        $pitch = set_pitch_id($name);
     }
 
-    return set_voice_id($name);
+    return $pitch;
 }
 
 function get_width_screen()
@@ -476,7 +480,7 @@ function say($phrase, $type_voice = '', $echo_too = false, $char_id = '')
 {
     //https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/SpeechSynthesisProgrammingGuide/FineTuning/FineTuning.html#//apple_ref/doc/uid/TP40004365-CH5-SW11
 
-    $volume = (empty($char_id)) ? '+ 0' : get_voice_id($char_id);
+    $volume = (empty($char_id)) ? '+ 0' : get_pitch_id($char_id);
     $voice  = (string) $type_voice;
     $voice  = empty($type_voice) ? '' : " -v ${type_voice} ";
     $phrase = mb_convert_encoding((string) $phrase, 'utf-8', 'auto');
@@ -514,19 +518,23 @@ function set_env_utf8_ja($timezone = 'Asia/Tokyo')
     mb_http_output('UTF-8');
 }
 
-function set_voice_id($name)
+function set_pitch_id($name)
 {
-    global $list_voice_id;
+    global $list_pitch_id;
 
-    $pos_or_neg = (rand() % 2) ? '+' : '-';
-    $volume     = (string) (rand(1, 127));
-    $volume     = "${pos_or_neg} ${volume}"; // + 123.233
+    $id = md5(trim($name));
 
-    $list_voice_id[$name] = $volume;
+    $count      = count($list_pitch_id);
+    $pos_or_neg = ( $count % 2 ) ? '+' : '-';
+    $pitch      = ( string ) ( rand(1, 127) );
+    $pitch      = "${pos_or_neg} ${pitch}";
 
-    return $volume;
+    // set voice pitch as voice id
+    $list_pitch_id[$id] = $pitch;
+
+    return $pitch;
 }
-$list_voice_id = array();
+$list_pitch_id = array();
 
 function set_root_dir()
 {
