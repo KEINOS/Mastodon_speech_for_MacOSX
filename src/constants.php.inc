@@ -11,8 +11,14 @@ const MARKER_TRIM     = '...';
 const NAME_FILE_CONF  = NAME_APP . '.json';
 const PATH_DIR_CURNT  = NAME_DIR_CURNT . DIR_SEP;
 const PATH_DIR_PARNT  = NAME_DIR_PARNT . DIR_SEP;
+const PATH_DIR_DIC_MECAB = '/Volumes/Macintosh_SD/Users/admin/GitHub/mecab-ipadic-neologd/build';
+const NAME_FILE_DIC_MECAB = 'mecab-ipadic-2.7.0-20070801-neologd-20180222';
+const DO_NOT_ANNOUNCE_DELETION = false;
+const ANNOUNCE_DELETION = true;
 const DO_NOT_ECHO     = false;
+const DO_ECHO         = true;
 const DO_NOT_RETURN   = false;
+const ECHO_SAY_CNTNT  = true;
 
 // Bash color constants
 // https://misc.flogisoft.com/bash/tip_colors_and_formatting

@@ -3,6 +3,7 @@ require_once('constants.php.inc');
 require_once('config.default.php.inc');
 require_once('functions.php.inc');
 
+
 // Check if its Mac OSX(Darwin)
 // Read / create application config file.
 // Setup application from config.
@@ -53,6 +54,8 @@ $bg_color        = BKGD_BLACK;
 $cmd = '';
 $has_been_tooted = false;
 
+echo PHP_EOL;
+
 while ($is_running) {
     $input           = '';
     $time_current    = time();
@@ -73,6 +76,7 @@ while ($is_running) {
         echo 'INPUT: ';
         $cmd = fgets(STDIN);
         echo_hr();
+        echo PHP_EOL;
     }
 
     if (! empty($cmd)) {

@@ -1,4 +1,8 @@
 <?php
+include_once('parsedown_extension.php.inc');
+
+$SayExtension  = new SayExtension();
+$EchoExtension = new EchoExtension();
 
 // 人気のQiita記事を取得
 $feed_url   = 'https://qiita.com/popular-items/feed';
@@ -22,27 +26,57 @@ foreach ($feed_array['entry'] as $item) {
 $data_diff = array_diff_key($data_new, $data_old);
 $data_new  = $data_diff + $data_old;
 
+shuffle($data_diff);
+
 foreach ($data_diff as $item) {
-    $url       = $item['url_md'];
-    $user_name = $item['author'];
-    $title     = $item['title'];
-    $contents  = file_get_contents($url);
-    $contents  = sanitize_eol($contents, PHP_EOL);
-    $contents  = explode(PHP_EOL, $contents);
+    $url        = $item['url_md'];
+    $user_name  = $item['author'];
+    $title      = $item['title'];
+    $contents   = file_get_contents($url);
+    $contents   = sanitize_eol($contents, PHP_EOL);
+
+    $contents = $EchoExtension->text($contents);
+    $contents = str_replace_endtag_with_eol($contents);
+    $contents = explode(PHP_EOL, $contents);
+
     $width_full = get_width_screen();
 
     echo_menu([$user_name => $title]);
     say_name($user_name . 'さんのキータ記事', $title, 'Kyoko');
     echo PHP_EOL;
     foreach ($contents as $line) {
-        $line  = mb_convert_kana($line, 'asKH', 'utf-8');
-        $line  = trim($line);
-        $line  = url_cleaner($line, false);
-        $width = $width_full - MARGIN_LEFT_MAX;
-        $line_echo = fix_width($line, $width - 3);
+
+        $line = mb_convert_kana($line, 'asKH', 'utf-8');
+
+        //Say
+        $line_say = $line;
+        $line_say = sanitize_toot_to_say($line_say);
+        $line_say = strip_tags($line_say);
+        $line_say = html_entity_decode($line_say);
+        $line_say = url_cleaner($line_say, DO_NOT_ANNOUNCE_DELETION);
+
+        //Echo
+        $line_echo = $line;
+
+        $color_font  = colour_font(FONT_BLUE);
+        $color_reset = colour_reset();
+        $line_echo   = str_replace('<h', "${color_font}<h", $line_echo);
+
+        $line_echo = strip_tags($line);
+        $line_echo = html_entity_decode($line_echo);
+
+        //Format line width
+        $width     = $width_full - MARGIN_LEFT_MAX;
+        $line_echo = fix_width($line_echo, $width - 3); /* */
         $line_echo = echo_indent($line_echo, true, MARGIN_LEFT_MAX-3);
-        echo(' ' . $line_echo);
-        say(trim($line), 'Otoya');
+        //echo(' ' . $line_echo);
+        echo $line_echo;
+
+        say([
+            'phrase'     => trim($line_say),
+            'type_voice' => 'Otoya',
+            'echo_too'   => DO_NOT_ECHO, /* ECHO_SAY_CNTNT */
+        ]);
     }
 }
 

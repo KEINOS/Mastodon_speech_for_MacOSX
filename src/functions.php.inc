@@ -2,25 +2,67 @@
 
 /* -------------------------------------------------------------- [C] */
 
-function colour_text($string, $color_font = 37, $color_bkgd = '')
+
+function colour_font($color_font = 37, $color_bkgd = '', $color_else = '')
 {
     $color_bkgd = (empty($color_bkgd)) ? '0;' : "${color_bkgd};";
-    return "\e[{$color_bkgd}{$color_font}m{$string}\e[0;40;40m";
+    $color_else = (empty($color_else)) ? '0;' : "${color_else};";
+    return "\e[${color_else}${color_bkgd}${color_font}m";
 }
 
-function convert_better_voice_acent($string)
+function colour_reset()
 {
-    $string  = strtolower($string);
-    $replace = get_accent_list();
+    return colour_font(FONT_WHITE, BKGD_BLACK, ATTRB_OFF);
+}
 
-    // キーの文字列の長さで並び替える（長い文字から置換するため）
-    uksort($replace, function ($a, $b) {
-        return (mb_strlen($b) > mb_strlen($a));
-    });
+function colour_text($string, $color_font = 37, $color_bkgd = '')
+{
+    $color_reset = colour_reset();
+    $color_font  = colour_font($color_font, $color_bkgd);
+    return $color_font . $string . $color_reset;
+}
 
-    $string = strReplaceAssoc($replace, $string);
+function convert_better_voice_accent($string)
+{
+
+    $string = replace_with_accent_list($string);
+    $string = convert_phrase_with_mecab($string);
 
     return $string;
+}
+
+function convert_phrase_with_mecab($string)
+{
+    $parsed = parse_mecab($string);
+    $result = '';
+
+    foreach ($parsed as $key => $line) {
+        $has_post_line   = (isset($parsed[$key+1]));
+
+        $mecab = $line['mecab'];
+        $yomi  = $line['phonetic'];
+
+        $pause = function ($val) {
+            $value_slnc = $val;
+            $value_slnc = "[[slnc ${value_slnc}]]";
+            return  $value_slnc;
+        };
+
+        $needs_pause = false;
+        $mecab_next  = array();
+
+        if ($has_post_line) {
+            $mecab_next  = $parsed[$key+1]['mecab'];
+            $needs_pause = is_pausable($mecab, $mecab_next);
+        }
+
+        if (! empty($yomi)) {
+            $result .= $yomi;
+            $result .= ($needs_pause) ? "{$pause(1)}" : '';
+        }
+    }
+
+    return  trim($result);
 }
 
 /* -------------------------------------------------------------- [D] */
@@ -49,19 +91,13 @@ function echo_colored($title, $contents, $fg_color, $bg_color)
 
     $title_len    = strlen($title);
     $width_screen = get_width_screen();
-    //$temp_title   = colour_text($title, FONT_BLACK, BKGD_GREEN);
 
     $lines = explode(PHP_EOL, $contents);
-    //print_r($lines);
 
     foreach ($lines as $line) {
         echo fix_width($line, 30);
     }
     echo_hr();
-
-    //$result .= colour_text($contents, $fg_color, $bg_color);
-
-    //echo $result;
 }
 
 function echo_debug($contents, $title = '')
@@ -138,7 +174,7 @@ function echo_indent($string, $return = false, $width_indent = WIDTH_INDENT, $ti
     $string       = trim($string, PHP_EOL);
     $array        = explode(PHP_EOL, $string);
     $margin_left  = str_repeat(' ', $width_indent);
-    $margin_right = ' '; // $title と$value の余白
+    $margin_right = ' '; // $title と$string の余白
     $has_title    = ! empty($title);
     $margin_right_len = strlen($margin_right);
 
@@ -154,12 +190,14 @@ function echo_indent($string, $return = false, $width_indent = WIDTH_INDENT, $ti
 
     if ($has_title) {
         $result  = colour_text($result, FONT_BLACK, BKGD_ORANGE);
+        $result .= $margin_right . colour_reset();
+    } else {
         $result .= $margin_right;
     }
 
     //title trigger
     $indent  = empty($title) ? $margin_left : '';
-    $result .= "\e[0;m";
+    $result .= colour_reset();
 
     foreach ($array as $value) {
         $result .= $indent . $value . PHP_EOL;
@@ -191,14 +229,22 @@ function echo_menu($array, $return = false)
 
     foreach ($array as $key => $value) {
         $value  = trim($value);
-        $marker = (strlen($key) > $margin_left_max) ? $trimmarker : '';
+        $value  = explode(PHP_EOL, $value);
+        foreach ($value as $line_num => $line) {
+            $marker = (strlen($key) > $margin_left_max) ? $trimmarker : '';
+            // add space for pad right to $key and trim to $width_key_max
+            $key = $key . $padding_right;
 
-        // add space for pad right to $key and trim to $width_key_max
-        $key = $key . $padding_right;
-        $key = mb_strimwidth($key, 0, $width_key_max-1, $marker, 'utf-8');
-
-        $value   = fix_width($value, $width_value);
-        $result .= echo_indent($value, true, $width_key_max, $key);
+            if (0==$line_num) {
+                $key  = mb_strimwidth($key, 0, $width_key_max-1, $marker, 'utf-8');
+                $line = fix_width($line, $width_value);
+                $result .= echo_indent($line, true, $width_key_max, $key);
+            } else {
+                $key  = mb_strimwidth($key, 0, $width_key_max, $marker, 'utf-8');
+                $line = fix_width($line, $width_value);
+                $result .= echo_indent($line, true, $width_key_max);
+            }
+        }
     }
 
     if ($return) {
@@ -224,7 +270,13 @@ function fetch_toot_info($toot)
     $a['content']      = sanitize_toot_to_echo($toot['content']);
     $a['say']          = sanitize_toot_to_say($toot['content']);
     $a['raw']          = $toot;
-    //$a['language']  = $toot['account']['language'];
+    $a['language']     = 'ja';
+
+    if (preg_match("/[一-龠]+|[ぁ-ん]+|[ァ-ヴー]+|[ａ-ｚＡ-Ｚ０-９]+/u", $a['say'])) {
+        $a['lang'] = 'ja';
+    } else {
+        $a['lang'] = 'en';
+    }
 
     return $a;
 }
@@ -232,6 +284,7 @@ function fetch_toot_info($toot)
 function fix_width($string, $width)
 {
     $start_pt = 0;
+    $string   = rtrim($string);
     $max_len  = mb_strwidth($string, 'utf-8');
     $str_temp = '';
     $result   = '';
@@ -251,10 +304,11 @@ function fix_width($string, $width)
 
 
 /* -------------------------------------------------------------- [G] */
+
 function get_accent_list()
 {
     include('accent_dictionary.php.inc');
-    
+
     return $accent_dictionary;
 }
 
@@ -314,9 +368,9 @@ function get_dir_index()
 function get_dir_root()
 {
     if (is_phar()) {
-        return dirname(Phar::running(false)) . DIR_SEP . PHP_EOL;
+        return dirname(Phar::running(false)) . DIR_SEP;
     } else {
-        return dirname(__FILE__) . DIR_SEP . PHP_EOL;
+        return dirname(__FILE__) . DIR_SEP;
     }
 }
 
@@ -329,7 +383,7 @@ function get_height_screen()
     }
     $width = trim(`tput lines`); //バッククォートであることに注意
 
-    return is_numeric($width) ? $width : $default_width;
+    return (integer) (is_numeric($width) ? $width : $default_width);
 }
 
 function get_length_key_max($array)
@@ -345,6 +399,21 @@ function get_length_key_max($array)
 function get_path_config()
 {
     return PATH_DIR_CURNT . NAME_FILE_CONF;
+}
+
+function get_pitch_id($name)
+{
+    global $list_pitch_id;
+
+    $id = md5(trim($name));
+
+    if (isset($list_pitch_id[$id])) {
+        $pitch = $list_pitch_id[$id];
+    } else {
+        $pitch = set_pitch_id($name);
+    }
+
+    return $pitch;
 }
 
 function get_random_voice($voices = array())
@@ -386,21 +455,6 @@ function get_type_voice()
     return $list;
 }
 
-function get_pitch_id($name)
-{
-    global $list_pitch_id;
-
-    $id = md5(trim($name));
-
-    if (isset($list_pitch_id[$id])) {
-        $pitch = $list_pitch_id[$id];
-    } else {
-        $pitch = set_pitch_id($name);
-    }
-
-    return $pitch;
-}
-
 function get_width_screen()
 {
     $default_width = 70; //デフォルト幅
@@ -410,7 +464,7 @@ function get_width_screen()
     }
     $width = trim(`tput cols`); //バッククォートであることに注意
 
-    return is_numeric($width) ? $width : $default_width;
+    return (integer) (is_numeric($width) ? $width : $default_width);
 }
 
 /* -------------------------------------------------------------- [I] */
@@ -443,9 +497,80 @@ function is_omit_account($string)
     return in_array($string, $list);
 }
 
+function is_pausable($mecab_pre, $mecab_post)
+{
+    $needs_pause = false;
+    $arg_pre_0   = $mecab_pre[0];
+    $arg_post_0  = $mecab_post[0];
+    $arg_post_1  = $mecab_post[1];
+
+    if ('助詞'==$arg_pre_0 && '名詞'==$arg_post_0) {
+        $needs_pause = true;
+    }
+    if ('名詞'==$arg_pre_0 && '名詞'==$arg_post_0 && '接尾'==$arg_post_1) {
+        $needs_pause = false;
+    }
+    if ('名詞'==$arg_pre_0 && '名詞'==$arg_post_0 && '固有名詞'==$arg_post_1) {
+        $needs_pause = true;
+    }
+    if ('動詞'==$arg_pre_0 && '非自立'==$arg_post_0 &&'名詞'==$arg_post_1) {
+        $needs_pause = true;
+    }
+
+    if ('助動詞'==$arg_pre_0 && '連帯詞'==$arg_post_0) {
+        $needs_pause = true;
+    }
+
+    return $needs_pause;
+}
+
 function is_phar()
 {
     return strlen(Phar::running()) > 0 ? true : false;
+}
+
+/* -------------------------------------------------------------- [P] */
+
+function parse_mecab(string $string)
+{
+    $mecab = new MeCab\Tagger([
+        '-d' => PATH_DIR_DIC_MECAB . DIR_SEP . NAME_FILE_DIC_MECAB,
+    ]);
+
+    $parsed = $mecab->parseToString($string);
+    $lines  = explode(PHP_EOL, $parsed);
+    $result = array();
+
+    foreach ($lines as $key => $line) {
+        $tmp   = explode("\t", $line);
+        if (! isset($tmp[1])) {
+            continue;
+        }
+        $word  = trim($tmp[0]);
+        $mecab = explode(',', $tmp[1]);
+        $result[$key] = [
+            'word'     => $word,
+            'mecab'    => $mecab,
+            'phonetic' => (isset($mecab[8])) ? $mecab[8] : $word,
+        ];
+    }
+
+    return $result;
+}
+
+/* -------------------------------------------------------------- [R] */
+
+function replace_with_accent_list($string)
+{
+    $string  = strtolower($string);
+    $replace = get_accent_list();
+
+    // キーの文字列の長さで並び替える（長い文字から置換するため）
+    uksort($replace, function ($a, $b) {
+        return (mb_strlen($b) > mb_strlen($a));
+    });
+
+    return strReplaceAssoc($replace, $string);
 }
 
 /* -------------------------------------------------------------- [S] */
@@ -474,24 +599,44 @@ function sanitize_toot_to_echo($string)
 
 function sanitize_toot_to_say($string)
 {
-    $string = strip_tags_in_toot($string);
-    $string = url_cleaner($string);
-    $string = escapeshellcmd($string);
-    $string = strip_repeated_strings($string);
+    $msg = '。コードブロックを省略しました。';
+
+    $string = strip_emoji($string);
+    $string = mb_convert_kana($string, 'asKH', 'utf-8');
+    $string = str_replace('<code>', "${msg}[[cmnt <code>", $string);
+    $string = str_replace('</code>', '</code> ]]', $string);
+    $string = strip_tags($string);
+    $string = html_entity_decode($string);
 
     return $string;
 }
 
-function say($phrase, $type_voice = '', $echo_too = false, $char_id = '')
+/**
+ * @ref https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/SpeechSynthesisProgrammingGuide/FineTuning/FineTuning.html#//apple_ref/doc/uid/TP40004365-CH5-SW11
+ */
+function get_arg(array $args, string $key)
 {
-    //https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/SpeechSynthesisProgrammingGuide/FineTuning/FineTuning.html#//apple_ref/doc/uid/TP40004365-CH5-SW11
+    return (isset($args[$key]) && ! empty(trim($args[$key]))) ? $args[$key] : false;
+}
 
-    $volume = (empty($char_id)) ? '+ 0' : get_pitch_id($char_id);
-    $voice  = (string) $type_voice;
+function say(array $args)
+{
+    // Argument options (preset and default)
+    $phrase     = get_arg($args, 'phrase')     ?: '';
+    $type_voice = get_arg($args, 'type_voice') ?: '';
+    $echo_too   = get_arg($args, 'echo_too')   ?: false;
+    $pitch      = get_arg($args, 'pitch')      ?: '+ 0';
+
     $voice  = empty($type_voice) ? '' : " -v ${type_voice} ";
-    $phrase = mb_convert_encoding((string) $phrase, 'utf-8', 'auto');
-    $phrase = convert_better_voice_acent($phrase);
-    $phrase = $voice . "'[[pbas ${volume}]]${phrase}[[rset 0]]'";
+
+    $phrase = str_replace('[[', '[', $phrase);
+    $phrase = str_replace(']]', '[', $phrase);
+    $phrase = str_replace('(', '', $phrase);
+    $phrase = str_replace(')', '', $phrase);
+
+    $phrase = convert_better_voice_accent($phrase);
+    $phrase = strip_repeated_strings($phrase);
+    $phrase = $voice . "'[[pbas ${pitch}]]${phrase}[[rset 0]]'";
 
     if ($echo_too) {
         echo_eol($phrase);
@@ -507,8 +652,15 @@ function say_hello()
 
 function say_name($user_name, $postfix, $voice = 'Kyoko')
 {
-    say("[[pbas + 1]]${user_name}", $voice);
-    say($postfix, $voice);
+    say([
+        'phrase' => $user_name,
+        'pitch'  => '+ 1',
+        'type_voice' => $voice,
+    ]);
+    say([
+        'phrase' => $postfix,
+        'type_voice' => $voice,
+    ]);
 }
 
 function set_env_utf8_ja($timezone = 'Asia/Tokyo')
@@ -565,6 +717,14 @@ function strip_emoji($string)
 function strip_repeated_strings($string)
 {
     $patterns[] = [
+        'pattern' => '/[xXｘＸ]{4,}/u',
+        'replace' => 'エックス',
+    ];
+    $patterns[] = [
+        'pattern' => '/[0-0]{4,}/u',
+        'replace' => '',
+    ];
+    $patterns[] = [
         'pattern' => '/[wWｗＷ]{4,}/u',
         'replace' => '爆笑',
     ];
@@ -591,17 +751,34 @@ function strip_tags_in_toot($string)
     $replace = [
         'http'    => PHP_EOL . 'http',
         '`'       => '\'',
-        '<br>'    => '<br />',
-        '</p>'    => '</p><br />',
-        '<br />'  => PHP_EOL,
-        '<code>'  => '```' . PHP_EOL,
-        '</code>' => PHP_EOL  . '```',
+        '<br />'  => '<br>',
+        '</p>'    => '</p><br>',
+        '<br>'    => PHP_EOL,
     ];
     $string = strReplaceAssoc($replace, $string);
     $string = strip_tags($string);
     $string = html_entity_decode($string);
 
     return trim($string);
+}
+
+function strip_url($string, $announce_deletion = false)
+{
+    return url_cleaner($string, $announce_deletion);
+}
+
+function str_replace_endtag_with_eol($string)
+{
+
+    $string   = str_replace('</p>', '</p>'  . PHP_EOL, $string);
+    $string   = str_replace('</h1>', '</h1>' . PHP_EOL, $string);
+    $string   = str_replace('</h2>', '</h2>' . PHP_EOL, $string);
+    $string   = str_replace('</h3>', '</h3>' . PHP_EOL, $string);
+    $string   = str_replace('</h4>', '</h4>' . PHP_EOL, $string);
+    $string   = str_replace('</h5>', '</h5>' . PHP_EOL, $string);
+    $string   = str_replace('</h6>', '</h6>' . PHP_EOL, $string);
+
+    return $string;
 }
 
 function strReplaceAssoc(array $replace, $subject)
@@ -611,21 +788,46 @@ function strReplaceAssoc(array $replace, $subject)
 
 /* -------------------------------------------------------------- [U] */
 
-function url_cleaner($string,$announce_deletion=true)
+function url_breakline($string)
 {
     $pattern = '/https?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:@&=+$,%#]+/';
 
     $string = preg_replace_callback(
         $pattern,
         function ($matches) {
-            global $announce_deletion;
+
+            if (isset($matches[0])) {
+                return $matches[0] . PHP_EOL;
+            }
             if (isset($matches[1])) {
                 return $matches[0];
             }
-            return ($announce_deletion) ? '。URLを省略しました。' : '';
+            return '';
         },
         $string
     );
 
     return $string;
+}
+
+function url_cleaner($string, $announce_deletion = false)
+{
+    $pattern = '/https?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:@&=+$,%#]+/';
+
+    $string = preg_replace_callback(
+        $pattern,
+        function ($matches) {
+            if (isset($matches[1])) {
+                echo_eol("match" . $matches[1]);
+                return $matches[0];
+            }
+            return '';
+        },
+        $string
+    );
+
+    $msg_delete = (empty(trim($string))) ? 'URLを省略しました。' : '';
+    $string = ($announce_deletion) ? $string . $msg_delete : $string;
+
+    return  $string;
 }
